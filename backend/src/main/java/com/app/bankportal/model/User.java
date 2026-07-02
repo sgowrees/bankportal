@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 @Table(name = "app_user")
 public class User {
 
+    @Column(unique = true)
     private String username;
     private String password;
     
