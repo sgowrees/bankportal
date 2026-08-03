@@ -2,7 +2,17 @@ package com.app.bankportal.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
+import com.app.bankportal.model.AccountType;
+import com.app.bankportal.model.User;
+import com.app.bankportal.model.CreditAccount;
 
+
+
+
+@Inheritance(strategy = InheritanceType.JOINED)
 @Entity
 public class Account {
 
@@ -11,12 +21,20 @@ public class Account {
     private Long id;
 
     private String accountNumber;
-    private BigDecimal balance;
+    private BigDecimal balance; 
+    
+    private BigDecimal amount;
+
+    private BigDecimal Dailylimit;
+    private BigDecimal dailySpent;
+    private LocalDate lastTransactionDate;
     
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
 
     private boolean isDefault;
+
+    
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -71,6 +89,31 @@ public class Account {
     }
     public boolean isDefault() {
         return isDefault;
+    }
+    public BigDecimal getDailylimit(){
+        return Dailylimit;
+    }
+    public void setDailylimit(BigDecimal Dailylimit){
+        this.Dailylimit = Dailylimit;
+    }
+    public BigDecimal getDailySpent() {
+        return dailySpent;
+    }
+    public void setDailySpent(BigDecimal dailySpent) {
+        this.dailySpent = dailySpent;
+    }
+    public LocalDate getLastTransactionDate() {
+        return lastTransactionDate;
+    }
+    public void setLastTransactionDate(LocalDate lastTransactionDate) {
+        this.lastTransactionDate = lastTransactionDate;
+    }
+
+        public BigDecimal getAmount() {
+        return amount;
+    }
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
 }

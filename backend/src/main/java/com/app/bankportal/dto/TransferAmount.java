@@ -2,10 +2,11 @@ package com.app.bankportal.dto;
 
 import java.math.BigDecimal;
 
-public class DepositRequest {
+public class TransferAmount {
 
     private Long userId;
     private Long accountId;
+    private Long toAccountId;
     private BigDecimal amount;
 
     public Long getUserId() {
@@ -14,6 +15,10 @@ public class DepositRequest {
 
     public Long getAccountId() {
         return accountId;
+    }
+
+    public Long getToAccountId() {
+        return toAccountId;
     }
 
     public BigDecimal getAmount() {
@@ -26,6 +31,10 @@ public class DepositRequest {
 
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
+    }
+
+    public void setToAccountId(Long toAccountId) {
+        this.toAccountId = toAccountId;
     }
 
     public void setAmount(BigDecimal amount) {

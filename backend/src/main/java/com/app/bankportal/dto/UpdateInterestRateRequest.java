@@ -2,33 +2,33 @@ package com.app.bankportal.dto;
 
 import java.math.BigDecimal;
 
-public class DepositRequest {
+public class UpdateInterestRateRequest {
 
     private Long userId;
     private Long accountId;
-    private BigDecimal amount;
+    private BigDecimal interestRate;
 
     public Long getUserId() {
         return userId;
-    }
-
-    public Long getAccountId() {
-        return accountId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
     }
 
     public void setUserId(Long userId) {
         this.userId = userId;
     }
 
+    public Long getAccountId() {
+        return accountId;
+    }
+
     public void setAccountId(Long accountId) {
         this.accountId = accountId;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public BigDecimal getInterestRate() {
+        return interestRate;
+    }
+
+    public void setInterestRate(BigDecimal interestRate) {
+        this.interestRate = interestRate;
     }
 }

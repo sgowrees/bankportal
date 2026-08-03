@@ -1,19 +1,17 @@
 package com.app.bankportal.controller;
 
-import com.app.bankportal.dto.AccountResponse;
-import com.app.bankportal.dto.DepositRequest;
+import com.app.bankportal.dto.*;
 import com.app.bankportal.mapper.AccountMapper;
 import com.app.bankportal.model.Account;
+import com.app.bankportal.model.User;
+import com.app.bankportal.repository.UserRepository;
 import com.app.bankportal.service.AccountService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import com.app.bankportal.dto.CreateAccountRequest;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/accounts")
@@ -21,28 +19,125 @@ public class AccountController {
 
     private final AccountService accountService;
     private final AccountMapper accountMapper;
+    private final UserRepository userRepository;
 
-    public AccountController(AccountService accountService, AccountMapper accountMapper) {
+    public AccountController(
+            AccountService accountService,
+            AccountMapper accountMapper,
+            UserRepository userRepository) {
+
         this.accountService = accountService;
         this.accountMapper = accountMapper;
+        this.userRepository = userRepository;
     }
 
-    @PostMapping("/deposit")
-    public ResponseEntity<AccountResponse> deposit(@RequestBody DepositRequest request) {
-        Account account = accountService.deposit(request);
-        AccountResponse response = accountMapper.toResponse(account);
-        return ResponseEntity.ok(response);
-    }
     @PostMapping("/create")
-    public ResponseEntity<AccountResponse> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<AccountResponse> createAccount(
+            Authentication authentication,
+            @RequestBody CreateAccountRequest request) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        request.setUserId(user.getId());
+
         Account account = accountService.createAccount(request);
-        AccountResponse response = accountMapper.toResponse(account);
+
+        return ResponseEntity.ok(
+                accountMapper.toResponse(account)
+        );
+    }
+
+    @GetMapping("")
+    public ResponseEntity<List<AccountResponse>> getAccounts(
+            Authentication authentication) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Account> accounts = accountService.getAccounts(user.getId());
+
+        List<AccountResponse> response = accounts.stream()
+                .map(accountMapper::toResponse)
+                .toList();
+
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> removeAccount(@PathVariable Long id) {
-        accountService.removeAccount(id);
+    @PostMapping("/{accountId}/deposit")
+    public ResponseEntity<AccountResponse> deposit(
+            Authentication authentication,
+            @PathVariable Long accountId,
+            @RequestBody DepositRequest request) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        request.setUserId(user.getId());
+        request.setAccountId(accountId);
+
+        Account result = accountService.deposit(request);
+
+        return ResponseEntity.ok(
+                accountMapper.toResponse(result)
+        );
+    }
+
+    @PostMapping("/{accountId}/withdraw")
+    public ResponseEntity<AccountResponse> withdraw(
+            Authentication authentication,
+            @PathVariable Long accountId,
+            @RequestBody WithdrawalRequest request) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        request.setUserId(user.getId());
+        request.setAccountId(accountId);
+
+        Account result = accountService.withdraw(request);
+
+        return ResponseEntity.ok(
+                accountMapper.toResponse(result)
+        );
+    }
+
+    @PostMapping("/{accountId}/transfer")
+    public ResponseEntity<List<AccountResponse>> transfer(
+            Authentication authentication,
+            @PathVariable Long accountId,
+            @RequestBody TransferAmount request) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        request.setUserId(user.getId());
+        request.setAccountId(accountId);
+
+        List<Account> accounts = accountService.transfer(request);
+
+        List<AccountResponse> response = accounts.stream()
+                .map(accountMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{accountId}")
+    public ResponseEntity<String> removeAccount(
+            Authentication authentication,
+            @PathVariable Long accountId) {
+
+        User user = userRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        DeleteAccountRequest request = new DeleteAccountRequest();
+
+        request.setUserId(user.getId());
+        request.setAccountId(accountId);
+
+        accountService.removeAccount(request);
+
         return ResponseEntity.ok("Account removed successfully");
     }
 }

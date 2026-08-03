@@ -2,7 +2,7 @@ package com.app.bankportal.dto;
 
 import java.math.BigDecimal;
 
-public class DepositRequest {
+public class WithdrawalRequest {
 
     private Long userId;
     private Long accountId;

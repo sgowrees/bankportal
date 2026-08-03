@@ -1,28 +1,23 @@
 package com.app.bankportal.dto;
 
-
 public class CreateAccountRequest {
 
-    private String username;
+    private Long userId;
     private String accountType;
 
-
-    public String getUsername() {
-        return username;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getAccountType(){
+    public String getAccountType() {
         return accountType;
     }
-    
-    public void setAccountType(String accountType){
-        this.accountType = accountType;
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-
-
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
 }
