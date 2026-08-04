@@ -1,0 +1,42 @@
+name: Bank Portal CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Start Spring Boot
+        working-directory: backend
+        run: |
+          mvn spring-boot:run &
+          sleep 30
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with: 
+            node-version: 20
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run API Tests
+        working-directory: tests/newman/collections
+        run: newman run banking-tests.json
