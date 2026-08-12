@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "Banking Portal Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "accountId",
+      "value": ""
+    }
+  ],
+
+  "item": [
+    {
+      "name": "Signup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/signup",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\":\"testuser1\",\n    \"password\":\"mypassword123\",\n    \"email\":\"testuser1@test.com\"\n}"
+        }
+      }
+    },
+
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Login successful', function(){",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "let response = pm.response.json();",
+              "pm.collectionVariables.set('token', response.token);",
+              "pm.collectionVariables.set('userId', response.userId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"username\":\"testuser1\",\n    \"password\":\"mypassword123\"\n}"
+        }
+      }
+    },
+
+    {
+      "name": "Create Credit Account",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Credit account created', function(){",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "let account = pm.response.json();",
+              "pm.collectionVariables.set('accountId', account.accountId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{baseUrl}}/users/{{userId}}/credit-accounts/create",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"accountType\":\"CREDIT\",\n    \"creditLimit\":5000,\n    \"interestRate\":0.15,\n    \"minPayment\":100,\n    \"dailyLimit\":1000\n}"
+        }
+      }
+    }
+  ]
+}

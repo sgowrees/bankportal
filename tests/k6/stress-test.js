@@ -3,9 +3,13 @@ import { check } from "k6";
 
 export const options = {
     stages: [
-        { duration: "30s", target: 10 },
-        { duration: "1m", target: 25 },
-        { duration: "1m", target: 50 },
+        { duration: "30s", target: 25 },
+        { duration: "30s", target: 50 },
+        { duration: "30s", target: 100 },
+        { duration: "30s", target: 200 },
+        { duration: "30s", target: 300 },
+        { duration: "30s", target: 500 },
+        { duration: "1m", target: 500 },
         { duration: "30s", target: 0 }
     ]
 };
@@ -15,7 +19,7 @@ const BASE_URL = "http://localhost:8080";
 export default function () {
 
     const id = `${__VU}-${__ITER}`;
-    const username = `loaduser${id}`;
+    const username = `stressuser${id}`;
 
     const headers = {
         headers: {
@@ -37,7 +41,9 @@ export default function () {
     if (!check(signupRes, {
         "signup successful": r => r.status === 200 || r.status === 201
     })) {
-        console.log(`SIGNUP FAILED ${username}: ${signupRes.status}`);
+        console.log(
+            `SIGNUP FAILED ${username}: ${signupRes.status}`
+        );
         return;
     }
 
@@ -54,11 +60,14 @@ export default function () {
     if (!check(loginRes, {
         "login successful": r => r.status === 200
     })) {
-        console.log(`LOGIN FAILED ${username}: ${loginRes.status}`);
+        console.log(
+            `LOGIN FAILED ${username}: ${loginRes.status}`
+        );
         return;
     }
 
     const loginData = JSON.parse(loginRes.body);
+
     const token = loginData.token;
     const userId = loginData.userId;
 
@@ -78,14 +87,15 @@ export default function () {
     if (!check(accountRes, {
         "get accounts successful": r => r.status === 200
     })) {
-        console.log(`ACCOUNT GET FAILED ${username}: ${accountRes.status}`);
+        console.log(
+            `ACCOUNT GET FAILED ${username}: ${accountRes.status}`
+        );
         return;
     }
 
     const accounts = JSON.parse(accountRes.body);
 
     if (accounts.length === 0) {
-        console.log(`NO ACCOUNT FOUND FOR ${username}`);
         return;
     }
 
@@ -117,7 +127,7 @@ export default function () {
         "withdraw successful": r => r.status === 200
     });
 
-    // CREATE SECOND ACCOUNT
+    // CREATE ACCOUNT
     const createRes = http.post(
         `${BASE_URL}/users/${userId}/accounts/create`,
         JSON.stringify({
@@ -129,14 +139,13 @@ export default function () {
     if (!check(createRes, {
         "account creation successful": r => r.status === 200
     })) {
-        console.log(`CREATE ACCOUNT FAILED ${username}: ${createRes.status}`);
         return;
     }
 
     const newAccount = JSON.parse(createRes.body);
     const newAccountId = newAccount.accountId;
 
-    // DELETE SECOND ACCOUNT
+    // DELETE ACCOUNT
     const removeRes = http.del(
         `${BASE_URL}/users/${userId}/accounts/${newAccountId}`,
         null,

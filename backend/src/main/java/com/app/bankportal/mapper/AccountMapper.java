@@ -14,6 +14,8 @@ public class AccountMapper {
         response.setBalance(account.getBalance());
         response.setDailylimit(account.getDailylimit());
         response.setUserId(account.getUser().getId());
+        response.setAccountNumber(account.getAccountNumber());
+        response.setAccountType(account.getAccountType());
         return response;
     
     }

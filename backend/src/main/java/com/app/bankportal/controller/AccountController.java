@@ -3,43 +3,32 @@ package com.app.bankportal.controller;
 import com.app.bankportal.dto.*;
 import com.app.bankportal.mapper.AccountMapper;
 import com.app.bankportal.model.Account;
-import com.app.bankportal.model.User;
-import com.app.bankportal.repository.UserRepository;
 import com.app.bankportal.service.AccountService;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/accounts")
+@RequestMapping("/users/{userId}/accounts")
 public class AccountController {
 
     private final AccountService accountService;
     private final AccountMapper accountMapper;
-    private final UserRepository userRepository;
 
     public AccountController(
             AccountService accountService,
-            AccountMapper accountMapper,
-            UserRepository userRepository) {
-
+            AccountMapper accountMapper) {
         this.accountService = accountService;
         this.accountMapper = accountMapper;
-        this.userRepository = userRepository;
     }
 
     @PostMapping("/create")
     public ResponseEntity<AccountResponse> createAccount(
-            Authentication authentication,
+            @PathVariable Long userId,
             @RequestBody CreateAccountRequest request) {
 
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        request.setUserId(user.getId());
+        request.setUserId(userId);
 
         Account account = accountService.createAccount(request);
 
@@ -50,12 +39,9 @@ public class AccountController {
 
     @GetMapping("")
     public ResponseEntity<List<AccountResponse>> getAccounts(
-            Authentication authentication) {
+            @PathVariable Long userId) {
 
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        List<Account> accounts = accountService.getAccounts(user.getId());
+        List<Account> accounts = accountService.getAccounts(userId);
 
         List<AccountResponse> response = accounts.stream()
                 .map(accountMapper::toResponse)
@@ -66,14 +52,11 @@ public class AccountController {
 
     @PostMapping("/{accountId}/deposit")
     public ResponseEntity<AccountResponse> deposit(
-            Authentication authentication,
+            @PathVariable Long userId,
             @PathVariable Long accountId,
             @RequestBody DepositRequest request) {
 
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        request.setUserId(user.getId());
+        request.setUserId(userId);
         request.setAccountId(accountId);
 
         Account result = accountService.deposit(request);
@@ -85,14 +68,11 @@ public class AccountController {
 
     @PostMapping("/{accountId}/withdraw")
     public ResponseEntity<AccountResponse> withdraw(
-            Authentication authentication,
+            @PathVariable Long userId,
             @PathVariable Long accountId,
             @RequestBody WithdrawalRequest request) {
 
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        request.setUserId(user.getId());
+        request.setUserId(userId);
         request.setAccountId(accountId);
 
         Account result = accountService.withdraw(request);
@@ -104,14 +84,11 @@ public class AccountController {
 
     @PostMapping("/{accountId}/transfer")
     public ResponseEntity<List<AccountResponse>> transfer(
-            Authentication authentication,
+            @PathVariable Long userId,
             @PathVariable Long accountId,
             @RequestBody TransferAmount request) {
 
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        request.setUserId(user.getId());
+        request.setUserId(userId);
         request.setAccountId(accountId);
 
         List<Account> accounts = accountService.transfer(request);
@@ -125,15 +102,12 @@ public class AccountController {
 
     @DeleteMapping("/{accountId}")
     public ResponseEntity<String> removeAccount(
-            Authentication authentication,
+            @PathVariable Long userId,
             @PathVariable Long accountId) {
-
-        User user = userRepository.findByUsername(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
 
         DeleteAccountRequest request = new DeleteAccountRequest();
 
-        request.setUserId(user.getId());
+        request.setUserId(userId);
         request.setAccountId(accountId);
 
         accountService.removeAccount(request);

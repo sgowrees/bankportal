@@ -14,6 +14,10 @@
       "value": ""
     },
     {
+      "key": "userId",
+      "value": ""
+    },
+    {
       "key": "accountId",
       "value": ""
     }
@@ -39,7 +43,6 @@
       }
     },
 
-
     {
       "name": "Login",
       "event": [
@@ -52,7 +55,8 @@
               "});",
               "",
               "let response = pm.response.json();",
-              "pm.collectionVariables.set('token', response.token);"
+              "pm.collectionVariables.set('token', response.token);",
+              "pm.collectionVariables.set('userId', response.userId);"
             ]
           }
         }
@@ -73,7 +77,6 @@
       }
     },
 
-
     {
       "name": "Create Account",
       "event": [
@@ -92,22 +95,21 @@
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
             "key": "Authorization",
             "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/accounts/create",
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/create",
         "body": {
           "mode": "raw",
           "raw": "{\n    \"accountType\":\"CHECKING\"\n}"
         }
       }
     },
-
 
     {
       "name": "Get Accounts",
@@ -137,10 +139,9 @@
             "value": "Bearer {{token}}"
           }
         ],
-        "url": "{{baseUrl}}/accounts"
+        "url": "{{baseUrl}}/users/{{userId}}/accounts"
       }
     },
-
 
     {
       "name": "Deposit",
@@ -148,15 +149,15 @@
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
             "key": "Authorization",
             "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/accounts/{{accountId}}/deposit",
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/deposit",
         "body": {
           "mode": "raw",
           "raw": "{\n    \"amount\":200\n}"
@@ -164,22 +165,21 @@
       }
     },
 
-
     {
       "name": "Withdraw",
       "request": {
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
             "key": "Authorization",
             "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/accounts/{{accountId}}/withdraw",
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/withdraw",
         "body": {
           "mode": "raw",
           "raw": "{\n    \"amount\":100\n}"
@@ -187,29 +187,27 @@
       }
     },
 
-
     {
       "name": "Transfer",
       "request": {
         "method": "POST",
         "header": [
           {
-            "key": "Content-Type",
-            "value": "application/json"
-          },
-          {
             "key": "Authorization",
             "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/accounts/{{accountId}}/transfer",
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/transfer",
         "body": {
           "mode": "raw",
           "raw": "{\n    \"toAccountId\":2,\n    \"amount\":50\n}"
         }
       }
     },
-
 
     {
       "name": "Create Second Account",
@@ -218,6 +216,10 @@
           "listen": "test",
           "script": {
             "exec": [
+              "pm.test('Second account created', function(){",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
               "let account = pm.response.json();",
               "pm.collectionVariables.set('accountId', account.accountId);"
             ]
@@ -236,14 +238,13 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/accounts/create",
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/create",
         "body": {
           "mode": "raw",
           "raw": "{\n    \"accountType\":\"CHECKING\"\n}"
         }
       }
     },
-
 
     {
       "name": "Remove Account",
@@ -255,7 +256,7 @@
             "value": "Bearer {{token}}"
           }
         ],
-        "url": "{{baseUrl}}/accounts/{{accountId}}"
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}"
       }
     }
 
