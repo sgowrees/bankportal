@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: bankportal_test
+          POSTGRES_DB: bankportal
           POSTGRES_USER: bankuser
           POSTGRES_PASSWORD: bankpassword
         ports:
@@ -42,7 +42,6 @@ jobs:
         run: |
           mvn spring-boot:run &
           sleep 30
-    
 
       - name: Install k6
         run: |
@@ -53,9 +52,7 @@ jobs:
           echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
           sudo apt-get update
           sudo apt-get install -y k6
-        
-      - name: Run Load Tests  
+
+      - name: Run Load Tests
         working-directory: tests/k6
         run: k6 run load-test.js
-
-     

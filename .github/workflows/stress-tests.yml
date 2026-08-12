@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: bankportal_test
+          POSTGRES_DB: bankportal
           POSTGRES_USER: bankuser
           POSTGRES_PASSWORD: bankpassword
         ports:
