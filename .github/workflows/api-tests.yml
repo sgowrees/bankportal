@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
@@ -12,6 +11,7 @@ on:
 jobs:
   backend-test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16
@@ -27,6 +27,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+          
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,8 +46,8 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        with: 
-            node-version: 20
+        with:
+          node-version: 20
 
       - name: Install Newman
         run: npm install -g newman

@@ -4,16 +4,14 @@ on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
 
-
 jobs:
   backend-test:
-
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:16
@@ -28,7 +26,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
 
       - name: Checkout code
