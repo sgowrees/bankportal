@@ -23,6 +23,14 @@
       "value": ""
     },
     {
+      "key": "secondAccountId",
+      "value": ""
+    },
+    {
+      "key": "transferAccountId",
+      "value": ""
+    },
+    {
       "key": "firstDepositResponse",
       "value": ""
     }
@@ -127,7 +135,13 @@
             "exec": [
               "pm.test('Account created', function () {",
               "    pm.expect([200, 201]).to.include(pm.response.code);",
-              "});"
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "if (response.accountId) {",
+              "    pm.collectionVariables.set('accountId', response.accountId);",
+              "}"
             ]
           }
         }
@@ -165,7 +179,9 @@
               "    pm.expect(accounts[0].accountId).to.exist;",
               "});",
               "",
-              "pm.collectionVariables.set('accountId', accounts[0].accountId);"
+              "if (!pm.collectionVariables.get('accountId')) {",
+              "    pm.collectionVariables.set('accountId', accounts[0].accountId);",
+              "}"
             ]
           }
         }
@@ -260,7 +276,7 @@
               "    pm.expect(secondResponse.balance).to.eql(firstResponse.balance);",
               "});",
               "",
-              "pm.test('Idempotent retry does not create a second transaction result', function () {",
+              "pm.test('Idempotent retry returns same response', function () {",
               "    pm.expect(secondResponse).to.eql(firstResponse);",
               "});"
             ]
@@ -343,6 +359,47 @@
       ]
     },
     {
+      "name": "Create Transfer Destination Account",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/create",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"accountType\": \"CHECKING\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Transfer destination account created', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Transfer destination account ID exists', function () {",
+              "    pm.expect(response.accountId).to.exist;",
+              "});",
+              "",
+              "pm.collectionVariables.set('transferAccountId', response.accountId);"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "Transfer",
       "request": {
         "method": "POST",
@@ -359,7 +416,7 @@
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/transfer",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"toAccountId\": 2,\n    \"amount\": 50\n}"
+          "raw": "{\n    \"toAccountId\": {{transferAccountId}},\n    \"amount\": 50\n}"
         }
       },
       "event": [
@@ -402,7 +459,15 @@
             "exec": [
               "pm.test('Second account created', function () {",
               "    pm.expect([200, 201]).to.include(pm.response.code);",
-              "});"
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Second account ID exists', function () {",
+              "    pm.expect(response.accountId).to.exist;",
+              "});",
+              "",
+              "pm.collectionVariables.set('secondAccountId', response.accountId);"
             ]
           }
         }
@@ -422,7 +487,7 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}"
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{secondAccountId}}"
       },
       "event": [
         {
