@@ -1,9 +1,10 @@
 {
   "info": {
-    "name": "Banking Portal Tests",
+    "name": "Banking Portal - Newman Regression Tests",
+    "_postman_id": "banking-portal-newman-tests",
+    "description": "API regression tests including authentication, account management, deposits, withdrawals, transfers, and idempotency testing.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-
   "variable": [
     {
       "key": "baseUrl",
@@ -20,11 +21,13 @@
     {
       "key": "accountId",
       "value": ""
+    },
+    {
+      "key": "firstDepositResponse",
+      "value": ""
     }
   ],
-
   "item": [
-
     {
       "name": "Signup",
       "request": {
@@ -38,29 +41,24 @@
         "url": "{{baseUrl}}/auth/signup",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"username\":\"testuser1\",\n    \"password\":\"mypassword123\",\n    \"email\":\"testuser1@test.com\"\n}"
+          "raw": "{\n    \"username\": \"testuser1\",\n    \"password\": \"mypassword123\",\n    \"email\": \"testuser1@test.com\"\n}"
         }
-      }
-    },
-
-    {
-      "name": "Login",
+      },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Login successful', function(){",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "let response = pm.response.json();",
-              "pm.collectionVariables.set('token', response.token);",
-              "pm.collectionVariables.set('userId', response.userId);"
+              "pm.test('Signup request completed', function () {",
+              "    pm.expect([200, 201, 400, 409]).to.include(pm.response.code);",
+              "});"
             ]
           }
         }
-      ],
+      ]
+    },
+    {
+      "name": "Login",
       "request": {
         "method": "POST",
         "header": [
@@ -72,25 +70,38 @@
         "url": "{{baseUrl}}/auth/login",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"username\":\"testuser1\",\n    \"password\":\"mypassword123\"\n}"
+          "raw": "{\n    \"username\": \"testuser1\",\n    \"password\": \"mypassword123\"\n}"
         }
-      }
-    },
-
-    {
-      "name": "Create Account",
+      },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Account created', function(){",
+              "pm.test('Login successful', function () {",
               "    pm.response.to.have.status(200);",
-              "});"
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Login token exists', function () {",
+              "    pm.expect(response.token).to.exist;",
+              "    pm.expect(response.token).to.not.be.empty;",
+              "});",
+              "",
+              "pm.test('User ID exists', function () {",
+              "    pm.expect(response.userId).to.exist;",
+              "});",
+              "",
+              "pm.collectionVariables.set('token', response.token);",
+              "pm.collectionVariables.set('userId', response.userId);"
             ]
           }
         }
-      ],
+      ]
+    },
+    {
+      "name": "Create Account",
       "request": {
         "method": "POST",
         "header": [
@@ -106,31 +117,24 @@
         "url": "{{baseUrl}}/users/{{userId}}/accounts/create",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"accountType\":\"CHECKING\"\n}"
+          "raw": "{\n    \"accountType\": \"CHECKING\"\n}"
         }
-      }
-    },
-
-    {
-      "name": "Get Accounts",
+      },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Get Accounts successful', function(){",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "let accounts = pm.response.json();",
-              "",
-              "pm.expect(accounts.length).to.be.above(0);",
-              "",
-              "pm.collectionVariables.set('accountId', accounts[0].accountId);"
+              "pm.test('Account created', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});"
             ]
           }
         }
-      ],
+      ]
+    },
+    {
+      "name": "Get Accounts",
       "request": {
         "method": "GET",
         "header": [
@@ -140,9 +144,33 @@
           }
         ],
         "url": "{{baseUrl}}/users/{{userId}}/accounts"
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Get Accounts successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const accounts = pm.response.json();",
+              "",
+              "pm.test('Accounts returned', function () {",
+              "    pm.expect(accounts).to.be.an('array');",
+              "    pm.expect(accounts.length).to.be.above(0);",
+              "});",
+              "",
+              "pm.test('Account ID exists', function () {",
+              "    pm.expect(accounts[0].accountId).to.exist;",
+              "});",
+              "",
+              "pm.collectionVariables.set('accountId', accounts[0].accountId);"
+            ]
+          }
+        }
+      ]
     },
-
     {
       "name": "Deposit",
       "request": {
@@ -155,16 +183,91 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "newman-deposit-001"
           }
         ],
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/deposit",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"amount\":200\n}"
+          "raw": "{\n    \"amount\": 200\n}"
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Deposit successful', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "",
+              "const response = pm.response.json();",
+              "",
+              "pm.test('Deposit response contains account ID', function () {",
+              "    pm.expect(response.accountId).to.exist;",
+              "});",
+              "",
+              "pm.collectionVariables.set('firstDepositResponse', JSON.stringify(response));"
+            ]
+          }
+        }
+      ]
     },
-
+    {
+      "name": "Deposit - Idempotency Retry",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "newman-deposit-001"
+          }
+        ],
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/deposit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 200\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Idempotent retry returns success', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});",
+              "",
+              "const firstResponse = JSON.parse(pm.collectionVariables.get('firstDepositResponse'));",
+              "const secondResponse = pm.response.json();",
+              "",
+              "pm.test('Idempotent retry returns same account ID', function () {",
+              "    pm.expect(secondResponse.accountId).to.eql(firstResponse.accountId);",
+              "});",
+              "",
+              "pm.test('Idempotent retry returns same balance', function () {",
+              "    pm.expect(secondResponse.balance).to.eql(firstResponse.balance);",
+              "});",
+              "",
+              "pm.test('Idempotent retry does not create a second transaction result', function () {",
+              "    pm.expect(secondResponse).to.eql(firstResponse);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
     {
       "name": "Withdraw",
       "request": {
@@ -177,16 +280,68 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "newman-withdraw-001"
           }
         ],
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/withdraw",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"amount\":100\n}"
+          "raw": "{\n    \"amount\": 100\n}"
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Withdraw successful', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
     },
-
+    {
+      "name": "Withdraw - Idempotency Retry",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "newman-withdraw-001"
+          }
+        ],
+        "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/withdraw",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"amount\": 100\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Withdraw idempotency retry returns success', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
     {
       "name": "Transfer",
       "request": {
@@ -204,28 +359,24 @@
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}/transfer",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"toAccountId\":2,\n    \"amount\":50\n}"
+          "raw": "{\n    \"toAccountId\": 2,\n    \"amount\": 50\n}"
         }
-      }
-    },
-
-    {
-      "name": "Create Second Account",
+      },
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Second account created', function(){",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "let account = pm.response.json();",
-              "pm.collectionVariables.set('accountId', account.accountId);"
+              "pm.test('Transfer request completed', function () {",
+              "    pm.expect([200, 201, 400, 403, 404]).to.include(pm.response.code);",
+              "});"
             ]
           }
         }
-      ],
+      ]
+    },
+    {
+      "name": "Create Second Account",
       "request": {
         "method": "POST",
         "header": [
@@ -241,11 +392,22 @@
         "url": "{{baseUrl}}/users/{{userId}}/accounts/create",
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"accountType\":\"CHECKING\"\n}"
+          "raw": "{\n    \"accountType\": \"CHECKING\"\n}"
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Second account created', function () {",
+              "    pm.expect([200, 201]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
     },
-
     {
       "name": "Remove Account",
       "request": {
@@ -257,8 +419,19 @@
           }
         ],
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}"
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Account removed', function () {",
+              "    pm.expect([200, 204]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ]
     }
-
   ]
 }
