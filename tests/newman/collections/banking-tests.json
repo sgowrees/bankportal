@@ -416,6 +416,10 @@
           {
             "key": "Authorization",
             "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ],
         "url": "{{baseUrl}}/users/{{userId}}/accounts/{{accountId}}"
